@@ -14,6 +14,9 @@ This file is part of Simple Fast Dictionary.
     You should have received a copy of the GNU Lesser General Public License
     along with Simple Fast Dictionary.  If not, see <http://www.gnu.org/licenses/>.
 
+    Author: Alexander Andreyev (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+    (C) Copyright 2012 Alexander Andreyev
+
 (Этот файл — часть Simple Fast Dictionary.
 
    Simple Fast Dictionary - свободная программа: вы можете перераспространять ее и/или
@@ -30,6 +33,9 @@ This file is part of Simple Fast Dictionary.
    Вы должны были получить копию Меньшей стандартной общественной лицензии GNU
    вместе с этой программой. Если это не так, см.
    <http://www.gnu.org/licenses/>.)
+
+   Автор: Александр Андреев (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+   (C) Copyright 2012 Александр Андреев
 */
 
 #include <string.h>
