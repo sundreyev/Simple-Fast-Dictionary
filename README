@@ -1,3 +1,5 @@
+Выжимки из описания:
+
 "Задача
 Как-то у меня возникла задача (в рамках разбора высокоуровневого сетевого протокола) организовать выявление известных программе слов (составляющих словарь) среди приходящих в программу строк.
 Ограничения/упрощения в рамках задачи следующие:
@@ -27,7 +29,7 @@ Doing 100000 cycles of searching with each type of dictionary...
 Подробнее - в файле Description-RU.pdf.
 
 
-English:
+English description citations:
 
 "Task
 Developing high level network protocol parser I needed some tool to discover words from pre-defined dictionary in arbitrary input strings. Here are limitations/simplifications:
