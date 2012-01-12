@@ -1,0 +1,58 @@
+"Задача
+Как-то у меня возникла задача (в рамках разбора высокоуровневого сетевого протокола) организовать выявление известных программе слов (составляющих словарь) среди приходящих в программу строк.
+Ограничения/упрощения в рамках задачи следующие:
+- строки состоят только из английских визуальных символов (скажем, в ASCII и, соответственно, с int-кодами от 33 до 122) и заканчиваются нуль-символом ('\0');
+- в процессе работы словарь изменяется только пополнением, причём гораздо реже чтения из него, либо вообще не изменяется;
+- памяти (ОЗУ) много;
+- словарь маленький (до 1000 слов, хотя жёсткого ограничения нет);
+- слово представляет из себя набор визуальных символов, органиченный символами-разделителями (тоже визуальными), либо началом или концом всей строки;
+- регистр символов учитывается (т.е. "word" и "WoRd" считаются разными словами);
+- результатом поиска должна быть информация о том, какое именно словарное слово имеется в анализируемой строке; возможно, будет полезной информация о взаимном порядке присутствующих в анализируемой строке словарных слов относительно друг друга:
+- каждое словарное слово может присутствовать в анализируемой строке больше одного раза и это должно отражаться в информации о взаимном порядке присутствующих в анализируемой строке словарных слов относительно друг друга;
+- язык реализации – Си, ОС – GNU/Linux вместе с GNU библиотекой языка Си (glibc).
+
+
+Результат
+На тестовой системе c Intel Core i7-2600K и 8 ГБ DDR3 PC-10666 1333 МГц ОЗУ, работающего в 2-канальном режиме, запуск программы-сравнения со 100 000 повторов поиска даёт следующие результаты (время выполнения просуммировано):
+
+> ./dictsComparison
+Parameter 'number of cycles' (positive integer) allowable.
+Doing 100000 cycles of searching with each type of dictionary...
+(0, PLAIN): [33] dict words found in string, time (secs) = [7.227557], mem used: 788 bytes
+(1, STRUCT): [33] dict words found in string, time (secs) = [0.709926], mem used: 7092 bytes
+(2, ARRAY): [33] dict words found in string, time (secs) = [0.745603], mem used: 1511356 bytes
+
+Примечательно, что примерно 10-кратное ускорение поиска на “структурированной” организации словаря по сравнению с “простой” организацией достигается за счёт примерно 9-кратного роста потребления ОЗУ."
+
+Подробнее - в файле Description-RU.pdf.
+
+
+English:
+
+"Task
+Developing high level network protocol parser I needed some tool to discover words from pre-defined dictionary in arbitrary input strings. Here are limitations/simplifications:
+- strings contain only english visual symbols (say, in ASCII and with numbers from 33 to 122) and end with NULL-symbol ('\0');
+- dictionary is not allowed to grow or it grows too rare than reads;
+- there is lot of RAM;
+- dictionary size is small (up to 1000 words, but there is no hard limit);
+- "word" means set of visual symbols limited by special delimiters (some of visual symbols, too) and/or the beginning/end of the string; there are several delimiters allowed between words;
+- symbol case matters (i.e. "word" and "WoRd" are different words);
+- search result should contain information about any dictionary word discovered in input string and could contain information about its order (relatively to other dictionary words);
+- each dictionary word could be presented in input string more than once and order information in search result should contain that as new case each time;
+- programming language - C (C99?), operating system - GNU/Linux with GNU C library (glibc).
+
+
+Result
+My test system with Intel Core i7-2600K processor and 8 GBytes DDR3 PC-10666 1333 MHz RAM in dual channel mode shows following result (times were summed):
+
+> ./dictsComparison
+Parameter 'number of cycles' (positive integer) allowable.
+Doing 100000 cycles of searching with each type of dictionary...
+(0, PLAIN): [33] dict words found in string, time (secs) = [7.227557], mem used: 788 bytes
+(1, STRUCT): [33] dict words found in string, time (secs) = [0.709926], mem used: 7092 bytes
+(2, ARRAY): [33] dict words found in string, time (secs) = [0.745603], mem used: 1511356 bytes
+
+It is interesting to note that .structured. variant works by 10 times faster than .plain. variant at cost of 9 times growth of memory usage."
+
+More details in file Description-EN.pdf.
+
