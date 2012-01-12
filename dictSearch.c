@@ -362,7 +362,12 @@ int searchInArrayDict(struct dict *dictionary, char *str, intptr_t *results, int
 	int i = 0, word = 0, k = 0;
 	struct arraySymbol *s = NULL, **letters = (struct arraySymbol**) dictionary->letters;
 	/* use internal results array for non-treads case */
-	if (THREADS_UNSAFE == dictionary->threadSafety) memset((void*)dictionary->results, 0, dictionary->numOfResults);
+	if (THREADS_UNSAFE == dictionary->threadSafety) {
+		memset((void*)dictionary->results, 0, dictionary->numOfResults);
+	}
+	else {
+		memset((void*)results, 0, numOfResults);
+	}
 
 	while ('\0' != str[i]) {
 		if (('.' == str[i]) || (',' == str[i]) || (';' == str[i]) || ('\t' == str[i]) || ('\n' == str[i]) || (' ' == str[i])) {
@@ -405,7 +410,12 @@ int searchInPlainDict(struct dict *dictionary, char *str, intptr_t *results, int
 	int strLen = 0, dictLen = 0;
 	char *token, *subtoken;
 	char *srcStr = (char*) malloc(strlen(str) + 1);
-	if (THREADS_UNSAFE == dictionary->threadSafety) memset((void*)dictionary->results, 0, dictionary->numOfResults);
+	if (THREADS_UNSAFE == dictionary->threadSafety) {
+		memset((void*)dictionary->results, 0, dictionary->numOfResults);
+	}
+	else {
+		memset((void*)results, 0, numOfResults);
+	}
 	strncpy(srcStr, str, strlen(str) + 1);
 
 	token = strtok(srcStr, " .,;\t\n");
@@ -459,7 +469,12 @@ int searchInPlainDict(struct dict *dictionary, char *str, intptr_t *results, int
 int searchInStructDict(struct dict *dictionary, char *str, intptr_t *results, int numOfResults) {
 	int i = 0, word = 0, k = 0;
 	struct structSymbol *s = NULL, **letters = (struct structSymbol**) dictionary->letters;
-	if (THREADS_UNSAFE == dictionary->threadSafety) memset((void*)dictionary->results, 0, dictionary->numOfResults);
+	if (THREADS_UNSAFE == dictionary->threadSafety) {
+		memset((void*)dictionary->results, 0, dictionary->numOfResults);
+	}
+	else {
+		memset((void*)results, 0, numOfResults);
+	}
 
 	while ('\0' != str[i]) {
 		if (('.' == str[i]) || (',' == str[i]) || (';' == str[i]) || ('\t' == str[i]) || ('\n' == str[i]) || (' ' == str[i])) {
