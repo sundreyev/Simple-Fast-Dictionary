@@ -15,16 +15,16 @@
 
 
 Результат
-На тестовой системе c Intel Core i7-2600K и 8 ГБ DDR3 PC-10666 1333 МГц ОЗУ, работающего в 2-канальном режиме, запуск программы-сравнения со 100 000 повторов поиска даёт следующие результаты (время выполнения просуммировано):
+На тестовой системе c Intel Core i7-2600K и 8 ГБ DDR3 PC-10666 1333 МГц ОЗУ, работающего в 2-канальном режиме, и установленной Slackware64 13.37, запуск программы-сравнения со 100 000 повторов поиска даёт следующие результаты (время выполнения просуммировано):
 
 > ./dictsComparison
 Parameter 'number of cycles' (positive integer) allowable.
 Doing 100000 cycles of searching with each type of dictionary...
-(0, PLAIN): [33] dict words found in string, time (secs) = [7.227557], mem used: 788 bytes
-(1, STRUCT): [33] dict words found in string, time (secs) = [0.709926], mem used: 7092 bytes
-(2, ARRAY): [33] dict words found in string, time (secs) = [0.745603], mem used: 1511356 bytes
+(0, PLAIN): [33] dict words found in string, time (secs) = [7.074024], mem used: 876 bytes
+(1, STRUCT): [33] dict words found in string, time (secs) = [0.692989], mem used: 6160 bytes
+(2, ARRAY): [33] dict words found in string, time (secs) = [0.688388], mem used: 1510952 bytes
 
-Примечательно, что примерно 10-кратное ускорение поиска на “структурированной” организации словаря по сравнению с “простой” организацией достигается за счёт примерно 9-кратного роста потребления ОЗУ."
+Примечательно, что примерно 10-кратное ускорение поиска на “структурированной” организации словаря по сравнению с “простой” организацией достигается за счёт примерно 7-кратного роста потребления ОЗУ."
 
 Подробнее - в файле Description-RU.pdf.
 
@@ -45,16 +45,16 @@ Developing high level network protocol parser I needed some tool to discover wor
 
 
 Result
-My test system with Intel Core i7-2600K processor and 8 GBytes DDR3 PC-10666 1333 MHz RAM in dual channel mode shows following result (times were summed):
+My test system with Intel Core i7-2600K processor and 8 GBytes DDR3 PC-10666 1333 MHz RAM in dual channel mode with Slackware64 13.37 installed shows following result (times were summed):
 
 > ./dictsComparison
 Parameter 'number of cycles' (positive integer) allowable.
 Doing 100000 cycles of searching with each type of dictionary...
-(0, PLAIN): [33] dict words found in string, time (secs) = [7.227557], mem used: 788 bytes
-(1, STRUCT): [33] dict words found in string, time (secs) = [0.709926], mem used: 7092 bytes
-(2, ARRAY): [33] dict words found in string, time (secs) = [0.745603], mem used: 1511356 bytes
+(0, PLAIN): [33] dict words found in string, time (secs) = [7.227557], mem used: 876 bytes
+(1, STRUCT): [33] dict words found in string, time (secs) = [0.692989], mem used: 6160 bytes
+(2, ARRAY): [33] dict words found in string, time (secs) = [0.688388], mem used: 1510952 bytes
 
-It is interesting to note that .structured. variant works by 10 times faster than .plain. variant at cost of 9 times growth of memory usage."
+It is interesting to note that .structured. variant works by 10 times faster than .plain. variant at cost of 7 times growth of memory usage."
 
 More details in file Description-EN.pdf.
 

@@ -14,7 +14,7 @@ This file is part of Simple Fast Dictionary.
     You should have received a copy of the GNU Lesser General Public License
     along with Simple Fast Dictionary.  If not, see <http://www.gnu.org/licenses/>.
 
-    Author: Alexander Andreyev (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+    Author: Alexander Andreyev (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
     (C) Copyright 2012 Alexander Andreyev
 
 (Этот файл — часть Simple Fast Dictionary.
@@ -34,14 +34,14 @@ This file is part of Simple Fast Dictionary.
    вместе с этой программой. Если это не так, см.
    <http://www.gnu.org/licenses/>.)
 
-   Автор: Александр Андреев (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+   Автор: Александр Андреев (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
    (C) Copyright 2012 Александр Андреев
 
 */
 
 #include "dictSearch.h"
 
-/* "NOTES" chapter from malloc(3) manual */
+/* "NOTES" section from malloc(3) manual */
 char srcStr[] = "By default, Linux follows an optimistic memory allocation strategy.  This means that when malloc() returns non-NULL there is no  guarantee that the memory really is available.  In case it turns out that the system is out of memory, one or more processes will be killed by the OOM killer.  For more information, see the description of /proc/sys/vm/overcommit_memory and /proc/sys/vm/oom_adj  in  proc(5),  and the kernel source file Documentation/vm/overcommit-accounting.\nNormally,  malloc() allocates memory from the heap, and adjusts the size of the heap as required, using sbrk(2).  When allocating blocks of memory larger than MMAP_THRESHOLD bytes, the glibc malloc() implementation allocates the memory as a private anonymous mapping  using mmap(2).   MMAP_THRESHOLD  is 128 kB by default, but is adjustable using mallopt(3).  Allocations performed using mmap(2) are unaffected by the RLIMIT_DATA resource limit (see getrlimit(2)).\nThe UNIX 98 standard requires malloc(), calloc(), and realloc() to set errno to ENOMEM upon failure.  Glibc assumes that  this  is  done (and  the  glibc  versions  of these routines do this); if you use a private malloc implementation that does not set errno, then certain library routines may fail without having a reason in errno.\nCrashes in malloc(), calloc(), realloc(), or free() are almost always related to heap corruption, such as overflowing an allocated chunk or freeing the same pointer twice.\nRecent  versions  of  Linux  libc (later than 5.4.23) and glibc (2.x) include a malloc() implementation which is tunable via environment variables.  When MALLOC_CHECK_ is set, a special (less efficient) implementation is used which is designed to be tolerant against simple errors,  such as double calls of free() with the same argument, or overruns of a single byte (off-by-one bugs).  Not all such errors can be protected against, however, and memory leaks can result.  If MALLOC_CHECK_ is set to 0, any  detected  heap  corruption  is  silently ignored;  if set to 1, a diagnostic message is printed on stderr; if set to 2, abort(3) is called immediately; if set to 3, a diagnostic message is printed on stderr and the program is aborted.  Using a nonzero MALLOC_CHECK_ value can be useful because  otherwise  a  crash may happen much later, and the true cause for the problem is then very hard to track down.";
 
 void fillDict(struct dict *dictionary) {
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 	fillDict(plainDict);
 	while (cycles > i) {
 		gettimeofday(&tv_st, NULL);
-		actualNumOfResults = searchInDict(plainDict, srcStr, NULL, 0);
+		actualNumOfResults = searchInDict(plainDict, srcStr, NULL);
 		gettimeofday(&tv_end, NULL);
 		stTime = (tv_st.tv_sec + (tv_st.tv_usec * 0.000001));
 		enTime = (tv_end.tv_sec + (tv_end.tv_usec * 0.000001));
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 	fillDict(structDict);
 	while (cycles > i) {
 		gettimeofday(&tv_st, NULL);
-		actualNumOfResults = searchInDict(structDict, srcStr, NULL, 0);
+		actualNumOfResults = searchInDict(structDict, srcStr, NULL);
 		gettimeofday(&tv_end, NULL);
 		stTime = (tv_st.tv_sec + (tv_st.tv_usec * 0.000001));
 		enTime = (tv_end.tv_sec + (tv_end.tv_usec * 0.000001));
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 	fillDict(arrayDict);
 	while (cycles > i) {
 		gettimeofday(&tv_st, NULL);
-		actualNumOfResults = searchInDict(arrayDict, srcStr, NULL, 0);
+		actualNumOfResults = searchInDict(arrayDict, srcStr, NULL);
 		gettimeofday(&tv_end, NULL);
 		stTime = (tv_st.tv_sec + (tv_st.tv_usec * 0.000001));
 		enTime = (tv_end.tv_sec + (tv_end.tv_usec * 0.000001));

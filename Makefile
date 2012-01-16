@@ -13,9 +13,8 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with Simple Fast Dictionary.  If not, see <http://www.gnu.org/licenses/>.
 #
-#    Author: Alexander Andreyev (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+#    Author: Alexander Andreyev (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
 #    (C) Copyright 2012 Alexander Andreyev
-#
 #
 #(Этот файл — часть Simple Fast Dictionary.
 #
@@ -34,12 +33,12 @@
 #   вместе с этой программой. Если это не так, см.
 #   <http://www.gnu.org/licenses/>.)
 #
-#   Автор: Александр Андреев (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+#   Автор: Александр Андреев (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
 #   (C) Copyright 2012 Александр Андреев
 
 CC=gcc
-CFLAGS=-O2
 ECHO=echo
+CFLAGS=-O2
 #CFLAGS=-ggdb
 LDFLAGS=-L.
 SOFLAGS=-shared -fPIC
@@ -47,7 +46,7 @@ LIBFILE=libDictSearch.so
 DEMOFILE=dictDemo
 COMPAREFILE=dictsComparison
 
-all:	help
+all:	demo compare
 lib:	$(LIBFILE)
 demo:	$(DEMOFILE)
 compare: $(COMPAREFILE)
@@ -66,6 +65,7 @@ clean:
 
 help:
 	@$(ECHO) "This is short help about building library and programs. More information is in files Description-RU.pdf (russian) and Description-EN.pdf (english)."
+	@$(ECHO) "	$$ make - build all at once"
 	@$(ECHO) "	$$ make lib - build only library"
 	@$(ECHO) "	$$ make demo - build library and demo program"
 	@$(ECHO) "	$$ make compare - build library and comparison program"

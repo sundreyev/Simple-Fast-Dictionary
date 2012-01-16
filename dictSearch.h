@@ -14,7 +14,7 @@ This file is part of Simple Fast Dictionary.
     You should have received a copy of the GNU Lesser General Public License
     along with Simple Fast Dictionary.  If not, see <http://www.gnu.org/licenses/>.
 
-    Author: Alexander Andreyev (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+    Author: Alexander Andreyev (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
     (C) Copyright 2012 Alexander Andreyev
 
 (Этот файл — часть Simple Fast Dictionary.
@@ -34,8 +34,9 @@ This file is part of Simple Fast Dictionary.
    вместе с этой программой. Если это не так, см.
    <http://www.gnu.org/licenses/>.)
 
-   Автор: Александр Андреев (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+   Автор: Александр Андреев (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
    (C) Copyright 2012 Александр Андреев
+
 */
 
 #include <string.h>
@@ -93,7 +94,6 @@ struct dict {
 	int oneStorage;
 	int numOfWords;
 	int numOfSymbols;
-	int numOfResults;
 	int greatestLen;
 	int lastAddedWordIdx;
 	int memUsed;
@@ -105,8 +105,7 @@ struct dict {
 
 struct dict *initDict(int dictType, int threadSafety, int oneStorage, int numOfWords, int numOfSymbols, int numOfResults);
 void putToDict(struct dict *dictionary, char *str);
-int searchInDict(struct dict *dictionary, char *str, intptr_t *results, int numOfResults);
+int searchInDict(struct dict *dictionary, char *str, intptr_t *results);
 void resizeResults(struct dict *dictionary, int newSize);
 void printDict(struct dict *dictionary);
 void freeDict(struct dict *dictionary);
-

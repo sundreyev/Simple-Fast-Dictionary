@@ -14,9 +14,8 @@ This file is part of Simple Fast Dictionary.
     You should have received a copy of the GNU Lesser General Public License
     along with Simple Fast Dictionary.  If not, see <http://www.gnu.org/licenses/>.
 
-    Author: Alexander Andreyev (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+    Author: Alexander Andreyev (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
     (C) Copyright 2012 Alexander Andreyev
-
 
 (Этот файл — часть Simple Fast Dictionary.
 
@@ -35,7 +34,7 @@ This file is part of Simple Fast Dictionary.
    вместе с этой программой. Если это не так, см.
    <http://www.gnu.org/licenses/>.)
 
-   Автор: Александр Андреев (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+   Автор: Александр Андреев (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
    (C) Copyright 2012 Александр Андреев
 
 */
@@ -91,12 +90,12 @@ int main(int argc, char *argv[]) {
 	myDict = initDict(dictType, threadSafety, oneStorage, numOfWords, numOfSymbols, numOfResults);
 	fillDict(myDict);
 	printDict(myDict);
-	actualNumOfResults = searchInDict(myDict, srcStr, NULL, 0);
+	actualNumOfResults = searchInDict(myDict, srcStr, NULL);
 	printf("\n[%d] dict words found in string, mem used: %d bytes, act. symbols: %d\n", actualNumOfResults, myDict->memUsed, myDict->actualNumOfSymbols);
 	printf("max [%d] entries were requested (in order of appearance):\n", numOfResults);
 	printf("----------------------------------------------------------------------------------\n");
-	while ((numOfResults > i) && (0 <= myDict->results[i])) {
-		printf("\t(appeared as %2d)\t%s [index=%d]\n", i, myDict->dictWords[myDict->results[i]], myDict->results[i]);
+	while ((myDict->results[0] > i) && (0 <= myDict->results[i+1])) {
+		printf("\t(appeared as %2d)\t%s [index=%d]\n", i, myDict->dictWords[myDict->results[i+1]], myDict->results[i+1]);
 		printf("----------------------------------------------------------------------------------\n");
 		i++;
 	}

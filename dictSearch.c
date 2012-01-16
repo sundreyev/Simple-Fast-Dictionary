@@ -14,7 +14,7 @@ This file is part of Simple Fast Dictionary.
     You should have received a copy of the GNU Lesser General Public License
     along with Simple Fast Dictionary.  If not, see <http://www.gnu.org/licenses/>.
 
-    Author: Alexander Andreyev (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+    Author: Alexander Andreyev (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
     (C) Copyright 2012 Alexander Andreyev
 
 (Этот файл — часть Simple Fast Dictionary.
@@ -34,8 +34,9 @@ This file is part of Simple Fast Dictionary.
    вместе с этой программой. Если это не так, см.
    <http://www.gnu.org/licenses/>.)
 
-   Автор: Александр Андреев (aka San АНДРЕЕВ) <sundreyev@gmail.com>
+   Автор: Александр Андреев (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
    (C) Copyright 2012 Александр Андреев
+
 */
 
 #include "dictSearch.h"
@@ -124,8 +125,8 @@ void **getLettersMem(struct dict *dictionary) {
 void resizeResults(struct dict *dictionary, int newSize) {
 	if (THREADS_UNSAFE == dictionary->threadSafety) {
 		free(dictionary->results);
-		dictionary->results = (intptr_t*) calloc(1, newSize * sizeof(intptr_t*));
-		dictionary->numOfResults = newSize;
+		dictionary->results = (intptr_t*) calloc(1, (newSize + 1) * sizeof(intptr_t*));
+		dictionary->results[0] = newSize;
 	}
 }
 
@@ -143,7 +144,6 @@ struct dict *initDict(int dictType, int threadSafety, int oneStorage, int numOfW
 	dictionary->lastAddedWordIdx = 0;
 	dictionary->numOfWords = numOfWords;
 	dictionary->numOfSymbols = numOfSymbols;
-	dictionary->numOfResults = numOfResults;
 	switch (dictionary->dictType) {
 		case STRUCT_DICT:
 			dictionary->strSize = sizeof(struct structSymbol);
@@ -161,8 +161,9 @@ struct dict *initDict(int dictType, int threadSafety, int oneStorage, int numOfW
 		dictionary->memUsed += ((numOfWords + 1) * sizeof(char*));
 	}
 	if (THREADS_UNSAFE == threadSafety) {
-		dictionary->results = (intptr_t*) calloc(1, numOfResults * sizeof(intptr_t*));
-		dictionary->memUsed += (numOfResults * sizeof(intptr_t*));
+		dictionary->results = (intptr_t*) calloc(1, (numOfResults + 1) * sizeof(intptr_t*));
+		dictionary->results[0] = numOfResults;
+		dictionary->memUsed += ((numOfResults + 1) * sizeof(intptr_t*));
 	}
 	if ((STRUCT_DICT == dictType) || (ARRAY_DICT == dictType)) {
 		dictionary->letters = getLettersMem(dictionary);
@@ -223,11 +224,11 @@ void putToArrayDict(struct dict *dictionary, char *str) {
 	letters = (struct arraySymbol **) dictionary->letters;
 	while (len > i) {
 		if (NULL != letters[str[i] - FIRST_VISUAL_SYMBOL_CODE]) {
-			/* some value for this letter exists, so use it */
+			/* some value for this symbol exists, so use it */
 			s = letters[str[i] - FIRST_VISUAL_SYMBOL_CODE];
 		}
 		else {
-			/* there will be first word with this letter at the begining */
+			/* there will be first word with this symbol at the begining */
 			s = (struct arraySymbol*) getSymbolMem(dictionary);
 			s->idx = -1;
 			letters[str[i] - FIRST_VISUAL_SYMBOL_CODE] = s;
@@ -245,16 +246,15 @@ void putToArrayDict(struct dict *dictionary, char *str) {
 /* ----- put word to tree dictionary ----- */
 void putToStructDict(struct dict *dictionary, char *str) {
 	int i = 1, len = strlen(str);
-	//int strSize = sizeof(struct structSymbol);
 	struct structSymbol *s, *next, **letters;
 
 	letters = (struct structSymbol **) dictionary->letters;
 	if (NULL != letters[str[0] - FIRST_VISUAL_SYMBOL_CODE]) {
-		/* some value for this letter exists, so use it */
+		/* some value for this symbol exists, so use it */
 		s = letters[str[0] - FIRST_VISUAL_SYMBOL_CODE];
 	}
 	else {
-		/* there will be first word with this letter at the begining */
+		/* there will be first word with this symbol at the begining */
 		s = (struct structSymbol*) getSymbolMem(dictionary);
 		s->idx = -1;
 		letters[str[0] - FIRST_VISUAL_SYMBOL_CODE] = s;
@@ -263,49 +263,46 @@ void putToStructDict(struct dict *dictionary, char *str) {
 		while (len > i) {
 			while (NULL != s) {
 				if ('\0' == s->c) {
+					/* initialized and not used symbol struct here */
 					s->c = str[i];
-					s->neighbour = (struct structSymbol*) getSymbolMem(dictionary);
 					if (len != (i+1)) {
+						/* input string still continue */
+						s->neighbour = (struct structSymbol*) getSymbolMem(dictionary);
 						s->neighbour->idx = -1;
 						s = s->neighbour;
 					}
 					else {
-						s->neighbour->idx = dictionary->lastAddedWordIdx - 1;
+						/* end of input string */
+						s->idx = dictionary->lastAddedWordIdx - 1;
 					}
 					break;
 				}
 				else if (str[i] == s->c) {
+					/* dictionary already has this symbol at current symbol place */
 					if (len != (i+1)) {
+						/* input string still continue, so go to the next symbol place */
 						if (NULL == s->neighbour) {
 							s->neighbour = (struct structSymbol*) getSymbolMem(dictionary);
 							s->neighbour->idx = -1;
 						}
 						s = s->neighbour;
 					}
-					else {
-						while (NULL != s) {
-							if ('\0' == s->c) break;
-							if (NULL == s->next) {
-								s->next = (struct structSymbol*) getSymbolMem(dictionary);
-								s->next->idx = dictionary->lastAddedWordIdx - 1;
-								break;
-							}
-							s = s->next;
-						}
-					}
 					break;
 				}
 				else {
 					if (NULL == s->next) {
 						s->next = (struct structSymbol*) getSymbolMem(dictionary);
-						s->next->c = str[i];
-						s->next->idx = -1;
-						s->next->neighbour = (struct structSymbol*) getSymbolMem(dictionary);
-						s = s->next->neighbour;
+						s = s->next;
+						s->c = str[i];
 						if (len == (i+1)) {
+							// end of input string
 							s->idx = dictionary->lastAddedWordIdx - 1;
 						}
 						else {
+							/* input string still continue, so go to the next symbol place */
+							s->idx = -1;
+							s->neighbour = (struct structSymbol*) getSymbolMem(dictionary);
+							s = s->neighbour;
 							s->idx = -1;
 						}
 						break;
@@ -319,15 +316,19 @@ void putToStructDict(struct dict *dictionary, char *str) {
 		}
 	}
 	else if (len == i) {
-		if ('\0' == s->c) {
-			s->idx = dictionary->lastAddedWordIdx - 1;
-		}
-		else {
-			while (NULL != s->next) {
-				s = s->next;
+		while (NULL != s) {
+			if (str[0] != s->c) {
+				if (NULL != s->next) s = s->next;
+				else {
+					s->next = (struct structSymbol*) getSymbolMem(dictionary);
+					s->next->c = str[0];
+					s->next->idx = dictionary->lastAddedWordIdx - 1;
+					break;
+				}
 			}
-			s->next = (struct structSymbol*) getSymbolMem(dictionary);
-			s->next->idx = dictionary->lastAddedWordIdx - 1;
+			else {
+				break;
+			}
 		}
 	}
 }
@@ -364,15 +365,15 @@ void putToDict(struct dict *dictionary, char *str) {
 /* ======================================== */
 
 /* ----- search word in index arrays dictionary ----- */
-int searchInArrayDict(struct dict *dictionary, char *str, intptr_t *results, int numOfResults) {
+int searchInArrayDict(struct dict *dictionary, char *str, intptr_t *results) {
 	int i = 0, word = 0, k = 0;
 	struct arraySymbol *s = NULL, **letters = (struct arraySymbol**) dictionary->letters;
 	/* use internal results array for non-treads case */
 	if (THREADS_UNSAFE == dictionary->threadSafety) {
-		memset((void*)dictionary->results, 0, dictionary->numOfResults);
+		memset((void*)(dictionary->results + 1), 0, dictionary->results[0]);
 	}
 	else {
-		memset((void*)results, 0, numOfResults);
+		memset((void*)(results + 1), 0, results[0]);
 	}
 
 	while ('\0' != str[i]) {
@@ -381,11 +382,11 @@ int searchInArrayDict(struct dict *dictionary, char *str, intptr_t *results, int
 			if ((NULL != s) && (NULL != s->letters[LAST_VISUAL_SYMBOL_CODE])) {
 				/* "termination symbol" in array, so there is a searched word */
 				if (THREADS_UNSAFE == dictionary->threadSafety) {
-					if (k < dictionary->numOfResults) dictionary->results[k] = s->letters[LAST_VISUAL_SYMBOL_CODE]->idx;
+					if (k < dictionary->results[0]) dictionary->results[k+1] = s->letters[LAST_VISUAL_SYMBOL_CODE]->idx;
 				}
 				else {
 					/* thread safe storage - each thread should have its own results array */
-					if (k < numOfResults) results[k] = s->letters[LAST_VISUAL_SYMBOL_CODE]->idx;
+					if (k < results[0]) results[k+1] = s->letters[LAST_VISUAL_SYMBOL_CODE]->idx;
 				}
 				k++;
 				s = NULL;
@@ -411,18 +412,18 @@ int searchInArrayDict(struct dict *dictionary, char *str, intptr_t *results, int
 
 
 /* ----- search word in plain dictionary ----- */
-int searchInPlainDict(struct dict *dictionary, char *str, intptr_t *results, int numOfResults) {
+int searchInPlainDict(struct dict *dictionary, char *str, intptr_t *results) {
 	int i = 0, j = 0;
-	int strLen = 0, dictLen = 0;
+	int strLen = strlen(str), dictLen = 0;
 	char *token, *subtoken;
-	char *srcStr = (char*) malloc(strlen(str) + 1);
+	char *srcStr = (char*) malloc(strLen + 1);
 	if (THREADS_UNSAFE == dictionary->threadSafety) {
-		memset((void*)dictionary->results, 0, dictionary->numOfResults);
+		memset((void*)(dictionary->results + 1), 0, dictionary->results[0]);
 	}
 	else {
-		memset((void*)results, 0, numOfResults);
+		memset((void*)(results + 1), 0, results[0]);
 	}
-	strncpy(srcStr, str, strlen(str) + 1);
+	strncpy(srcStr, str, strLen + 1);
 
 	token = strtok(srcStr, " .,;\t\n");
 	if (NULL != token) {
@@ -431,11 +432,11 @@ int searchInPlainDict(struct dict *dictionary, char *str, intptr_t *results, int
 			dictLen = strlen(dictionary->dictWords[j]);
 			if ((0 == strncmp(token, dictionary->dictWords[j], dictLen)) && (strLen == dictLen)) {
 				if (THREADS_UNSAFE == dictionary->threadSafety) {
-					if (i < dictionary->numOfResults) dictionary->results[i] = j;
+					if (i < dictionary->results[0]) dictionary->results[i+1] = j;
 				}
 				else {
 					/* thread safe storage - each thread should have its own results array */
-					if (i < numOfResults) results[i] = j;
+					if (i < results[0]) results[i+1] = j;
 				}
 				i++;
 				break;
@@ -450,11 +451,11 @@ int searchInPlainDict(struct dict *dictionary, char *str, intptr_t *results, int
 				dictLen = strlen(dictionary->dictWords[j]);
 				if ((0 == strncmp(subtoken, dictionary->dictWords[j], dictLen)) && (strLen == dictLen)) {
 					if (THREADS_UNSAFE == dictionary->threadSafety) {
-						if (i < dictionary->numOfResults) dictionary->results[i] = j;
+						if (i < dictionary->results[0]) dictionary->results[i+1] = j;
 					}
 					else {
 						/* thread safe storage - each thread should have its own results array */
-						if (i < numOfResults) results[i] = j;
+						if (i < results[0]) results[i+1] = j;
 					}
 					i++;
 					break;
@@ -472,32 +473,29 @@ int searchInPlainDict(struct dict *dictionary, char *str, intptr_t *results, int
 
 
 /* ----- search word in structures dictionary ----- */
-int searchInStructDict(struct dict *dictionary, char *str, intptr_t *results, int numOfResults) {
+int searchInStructDict(struct dict *dictionary, char *str, intptr_t *results) {
 	int i = 0, word = 0, k = 0;
-	struct structSymbol *s = NULL, **letters = (struct structSymbol**) dictionary->letters;
+	struct structSymbol *s = NULL, *prev = NULL, **letters = (struct structSymbol**) dictionary->letters;
 	if (THREADS_UNSAFE == dictionary->threadSafety) {
-		memset((void*)dictionary->results, 0, dictionary->numOfResults);
+		memset((void*)(dictionary->results + sizeof(intptr_t*)), 0, dictionary->results[0]);
 	}
 	else {
-		memset((void*)results, 0, numOfResults);
+		memset((void*)(results + sizeof(intptr_t*)), 0, results[0]);
 	}
 
 	while ('\0' != str[i]) {
 		if (('.' == str[i]) || (',' == str[i]) || (';' == str[i]) || ('\t' == str[i]) || ('\n' == str[i]) || (' ' == str[i])) {
-			while (NULL != s) {
-				if ('\0' == s->c) {
-					if (THREADS_UNSAFE == dictionary->threadSafety) {
-						if (k < dictionary->numOfResults) dictionary->results[k] = s->idx;
-					}
-					else {
-						/* thread safe storage - each thread should have its own results array */
-						if (k < numOfResults) results[k] = s->idx;
-					}
-					s = NULL;
-					k++;
-					break;
+			if (NULL != prev) {
+				if (THREADS_UNSAFE == dictionary->threadSafety) {
+					if (k < dictionary->results[0]) dictionary->results[k+1] = prev->idx;
 				}
-				s = s->next;
+				else {
+					/* thread safe storage - each thread should have its own results array */
+					if (k < results[0]) results[k+1] = prev->idx;
+				}
+				prev = NULL;
+				s = NULL;
+				k++;
 			}
 			// no word or word ended
 			word = 0;
@@ -510,8 +508,10 @@ int searchInStructDict(struct dict *dictionary, char *str, intptr_t *results, in
 			}
 			else {
 				// word currently here
+				prev = NULL;
 				while (NULL != s) {
 					if (str[i] == s->c) {
+						if (-1 != s->idx) prev = s;
 						s = s->neighbour;
 						break;
 					}
@@ -527,12 +527,12 @@ int searchInStructDict(struct dict *dictionary, char *str, intptr_t *results, in
 
 
 /* ----- common interface 'search' function ----- */
-int searchInDict(struct dict *dictionary, char *str, intptr_t *results, int numOfResults) {
+int searchInDict(struct dict *dictionary, char *str, intptr_t *results) {
 	int result = 0;
 	switch (dictionary->dictType) {
-		case PLAIN_DICT: result = searchInPlainDict(dictionary, str, results, numOfResults); break;
-		case STRUCT_DICT: result = searchInStructDict(dictionary, str, results, numOfResults); break;
-		case ARRAY_DICT: result = searchInArrayDict(dictionary, str, results, numOfResults); break;
+		case PLAIN_DICT: result = searchInPlainDict(dictionary, str, results); break;
+		case STRUCT_DICT: result = searchInStructDict(dictionary, str, results); break;
+		case ARRAY_DICT: result = searchInArrayDict(dictionary, str, results); break;
 		default: break;
 	}
 	return result;
@@ -619,12 +619,13 @@ void printStructPlace(struct structSymbol *s, int j, char *tmp) {
 		}
 		else {
 			tmp[j] = s->c;
-			if ('\0' == s->c) {
+			if (-1 != s->idx) {
+				tmp[j+1] = '\0';
 				while ('\0' != tmp[k]) {
 					printf("%c", tmp[k]);
 					k++;
 				}
-				printf(" [index=%d]\n", s->idx);
+				printf(" [index=%d, k=%d]\n", s->idx, k);
 				k = 0;
 			}
 		}
