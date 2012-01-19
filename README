@@ -28,6 +28,8 @@ Doing 100000 cycles of searching with each type of dictionary...
 
 Подробнее - в файле Description-RU.pdf.
 
+На борту также модуль для Perl, позволяющий использовать библиотеку из perl-кода, однако без поддержки потоков.
+
 
 English description citations:
 
@@ -58,3 +60,4 @@ It is interesting to note that .structured. variant works by 10 times faster tha
 
 More details in file Description-EN.pdf.
 
+There is a Perl module for direct use library from perl-code. Threads not supported for perl calls.

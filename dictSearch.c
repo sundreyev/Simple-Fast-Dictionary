@@ -125,7 +125,7 @@ void **getLettersMem(struct dict *dictionary) {
 void resizeResults(struct dict *dictionary, int newSize) {
 	if (THREADS_UNSAFE == dictionary->threadSafety) {
 		free(dictionary->results);
-		dictionary->results = (intptr_t*) calloc(1, (newSize + 1) * sizeof(intptr_t*));
+		dictionary->results = (intptr_t*) calloc(1, (newSize + 1) * sizeof(intptr_t));
 		dictionary->results[0] = newSize;
 	}
 }
@@ -161,9 +161,9 @@ struct dict *initDict(int dictType, int threadSafety, int oneStorage, int numOfW
 		dictionary->memUsed += ((numOfWords + 1) * sizeof(char*));
 	}
 	if (THREADS_UNSAFE == threadSafety) {
-		dictionary->results = (intptr_t*) calloc(1, (numOfResults + 1) * sizeof(intptr_t*));
+		dictionary->results = (intptr_t*) calloc(1, (numOfResults + 1) * sizeof(intptr_t));
 		dictionary->results[0] = numOfResults;
-		dictionary->memUsed += ((numOfResults + 1) * sizeof(intptr_t*));
+		dictionary->memUsed += ((numOfResults + 1) * sizeof(intptr_t));
 	}
 	if ((STRUCT_DICT == dictType) || (ARRAY_DICT == dictType)) {
 		dictionary->letters = getLettersMem(dictionary);
@@ -217,10 +217,10 @@ void freeDict(struct dict *dictionary) {
 /* ===================================== */
 
 /* ----- put word to index dictionary ----- */
-void putToArrayDict(struct dict *dictionary, char *str) {
-	int i = 0, len = strlen(str);
+int putToArrayDict(struct dict *dictionary, char *str) {
+	int i = 0, len = strlen(str), result = 0;
 	struct arraySymbol *s, **letters;
-
+	// TODO: check for already inserted word
 	letters = (struct arraySymbol **) dictionary->letters;
 	while (len > i) {
 		if (NULL != letters[str[i] - FIRST_VISUAL_SYMBOL_CODE]) {
@@ -228,7 +228,7 @@ void putToArrayDict(struct dict *dictionary, char *str) {
 			s = letters[str[i] - FIRST_VISUAL_SYMBOL_CODE];
 		}
 		else {
-			/* there will be first word with this symbol at the begining */
+			/* no such symbol used ar current symbol place */
 			s = (struct arraySymbol*) getSymbolMem(dictionary);
 			s->idx = -1;
 			letters[str[i] - FIRST_VISUAL_SYMBOL_CODE] = s;
@@ -237,15 +237,22 @@ void putToArrayDict(struct dict *dictionary, char *str) {
 		letters = s->letters;
 		i++;
 	}
-	s = (struct arraySymbol *) getSymbolMem(dictionary);
-	s->idx = dictionary->lastAddedWordIdx - 1;
-	letters[LAST_VISUAL_SYMBOL_CODE] = s;
+	/* check if word is already in dictionary */
+	if (NULL == letters[LAST_VISUAL_SYMBOL_CODE]) {
+		s = (struct arraySymbol *) getSymbolMem(dictionary);
+		s->idx = dictionary->lastAddedWordIdx - 1;
+		letters[LAST_VISUAL_SYMBOL_CODE] = s;
+	}
+	else {
+		result = letters[LAST_VISUAL_SYMBOL_CODE]->idx;
+	}
+	return result;
 }
 
 
 /* ----- put word to tree dictionary ----- */
-void putToStructDict(struct dict *dictionary, char *str) {
-	int i = 1, len = strlen(str);
+int putToStructDict(struct dict *dictionary, char *str) {
+	int i = 1, len = strlen(str), result = 0;
 	struct structSymbol *s, *next, **letters;
 
 	letters = (struct structSymbol **) dictionary->letters;
@@ -286,6 +293,10 @@ void putToStructDict(struct dict *dictionary, char *str) {
 							s->neighbour->idx = -1;
 						}
 						s = s->neighbour;
+					}
+					else {
+						/* dictionary already contains this word */
+						result = s->idx;
 					}
 					break;
 				}
@@ -331,31 +342,39 @@ void putToStructDict(struct dict *dictionary, char *str) {
 			}
 		}
 	}
+	return result;
 }
 
 
 /* ----- common interface and plain dictionary 'put' function ----- */
-void putToDict(struct dict *dictionary, char *str) {
-	int len = strlen(str);
+int putToDict(struct dict *dictionary, char *str) {
+	int len = strlen(str), result = 0;
 	if (len > dictionary->greatestLen) {
 		dictionary->greatestLen = len;
 	}
 
 	dictionary->lastAddedWordIdx++;
-	if ((PLAIN_DICT == dictionary->dictType) || (DUPLICATED_STORAGE == dictionary->oneStorage)) {
-		dictionary->dictWords = getWordsMem(dictionary);
-		if (NULL == dictionary->dictWords[dictionary->lastAddedWordIdx-1]) {
-			dictionary->dictWords[dictionary->lastAddedWordIdx-1] = (char*) malloc(len+1);
-			strncpy(dictionary->dictWords[dictionary->lastAddedWordIdx-1], str, len+1);
-			dictionary->memUsed += len + 1;
-		}
-	}
 	switch (dictionary->dictType) {
 		case PLAIN_DICT: dictionary->actualNumOfSymbols += len; break;
-		case STRUCT_DICT: putToStructDict(dictionary, str); break;
-		case ARRAY_DICT: putToArrayDict(dictionary, str); break;
-		default: break;;
+		case STRUCT_DICT: result = putToStructDict(dictionary, str); break;
+		case ARRAY_DICT: result = putToArrayDict(dictionary, str); break;
+		default: break;
 	}
+	if (0 == result) {
+		if ((PLAIN_DICT == dictionary->dictType) || (DUPLICATED_STORAGE == dictionary->oneStorage)) {
+			dictionary->dictWords = getWordsMem(dictionary);
+			if (NULL == dictionary->dictWords[dictionary->lastAddedWordIdx-1]) {
+				dictionary->dictWords[dictionary->lastAddedWordIdx-1] = (char*) malloc(len+1);
+				strncpy(dictionary->dictWords[dictionary->lastAddedWordIdx-1], str, len+1);
+				dictionary->memUsed += len + 1;
+			}
+		}
+	}
+	else {
+		/* word is already on dictionary */
+		dictionary->lastAddedWordIdx--;
+	}
+	return result;
 }
 
 

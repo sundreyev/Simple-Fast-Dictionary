@@ -36,76 +36,87 @@ This file is part of Simple Fast Dictionary.
 
    Автор: Александр Андреев (aka San АНДРЕЕВ, http://linuxportal.ru) <sundreyev@gmail.com>
    (C) Copyright 2012 Александр Андреев
-
 */
 
-#include <string.h>
+%module FastDict
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Following is from Swig-1.3 doc - http://www.swig.org/Doc1.3/Perl5.html#Perl5_nn33 */
+%typemap(in) char ** {
+	AV *tempav;
+	I32 len;
+	int i;
+	SV  **tv;
 
-/* only visual ASCII symbols */
-#define FIRST_VISUAL_SYMBOL_CODE 33
-#define LAST_VISUAL_SYMBOL_CODE 91
-
-#define PLAIN_DICT 0
-#define STRUCT_DICT 1
-#define ARRAY_DICT 2
-
-#define THREADS_UNSAFE 0
-#define THREADS_SAFE 1
-
-#define ONE_STORAGE 0
-#define DUPLICATED_STORAGE 1
-
-
-struct memArea {
-	void *mem;
-	int size;
-	int inUse;
-	struct memArea *next;
+	if (!SvROK($input))
+		croak("$input is not an array.");
+	if (SvTYPE(SvRV($input)) != SVt_PVAV)
+		croak("$input is not an array.");
+	tempav = (AV*)SvRV($input);
+	len = av_len(tempav);
+	$1 = (char **) malloc((len+2)*sizeof(char *));
+	for (i = 0; i <= len; i++) {
+		tv = av_fetch(tempav, i, 0);
+		$1[i] = (char *) SvPV(*tv,PL_na);
+	}
+	$1[i] = 0;
 };
 
-struct structSymbol {
-	struct structSymbol *neighbour;
-	struct structSymbol *next;
-	char c;
-	int idx;
-};
+/* This cleans up our char ** array after the function call */
+%typemap(freearg) char ** {
+	free($1);
+}
 
-struct arraySymbol {
-	short int idx;
-	struct arraySymbol **letters;
-};
+/* Creates a new Perl array and places a NULL-terminated char ** into it */
+%typemap(out) char ** {
+	AV *myav;
+	SV **svs;
+	int i = 0,len = 0;
+	/* Figure out how many elements we have */
+	while ($1[len])
+		len++;
+	svs = (SV **) malloc(len*sizeof(SV *));
+	for (i = 0; i < len ; i++) {
+		svs[i] = sv_newmortal();
+		sv_setpv((SV*)svs[i],$1[i]);
+	};
+	myav = av_make(len,svs);
+	free(svs);
+	$result = newRV_noinc((SV*)myav);
+	sv_2mortal($result);
+	argvi++;
+}
 
-struct dict {
-	char **dictWords;
-	void **letters;
-	struct memArea *symbolsMem;
-	struct memArea *lastSymbolMemBlock;
-	struct memArea *lettersMem;
-	struct memArea *lastLettersMemBlock;
-	int arrSize;
-	int strSize;
-	intptr_t *results;
-	int dictType;
-	int threadSafety;
-	int oneStorage;
-	int numOfWords;
-	int numOfSymbols;
-	int greatestLen;
-	int lastAddedWordIdx;
-	int memUsed;
-	int actualNumOfWordPtrs;
-	int actualNumOfSymbols;
-	int actualNumOfLetters;
-};
+%include stdint.i
+
+/* Following is my conversion for intptr_t* arrays - for results array */
+%typemap(in) intptr_t * {
+	/* Currently no updates of results array is allowed from Perl code */
+	$1 = NULL;
+}
+%typemap(freearg) intptr_t * {
+	free($1);
+}
+%typemap(out) intptr_t * {
+	AV *intArray;
+	SV **scalarVal;
+	int arrLen = $1[0], i = 0;
+	scalarVal = (SV**) malloc((arrLen + 1) * sizeof(SV*));
+	for (i = 0; i <= arrLen; i++) {
+		scalarVal[i] = sv_newmortal();
+		sv_setiv(scalarVal[i], $1[i]);
+	}
+	intArray = av_make(arrLen + 1, scalarVal);
+	free(scalarVal);
+	$result = newRV_noinc((SV*)intArray);
+	sv_2mortal($result);
+	argvi++;
+}
 
 
-struct dict *initDict(int dictType, int threadSafety, int oneStorage, int numOfWords, int numOfSymbols, int numOfResults);
-int putToDict(struct dict *dictionary, char *str);
-int searchInDict(struct dict *dictionary, char *str, intptr_t *results);
-void resizeResults(struct dict *dictionary, int newSize);
-void printDict(struct dict *dictionary);
-void freeDict(struct dict *dictionary);
+%{
+	/* Includes the header in the wrapper code */
+	#include "../dictSearch.h"
+%}
+ 
+/* Parse the header file to generate wrappers */
+%include "../dictSearch.h"

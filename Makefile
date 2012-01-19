@@ -38,6 +38,7 @@
 
 CC=gcc
 ECHO=echo
+SWIG=swig
 CFLAGS=-O2
 #CFLAGS=-ggdb
 LDFLAGS=-L.
@@ -45,8 +46,11 @@ SOFLAGS=-shared -fPIC
 LIBFILE=libDictSearch.so
 DEMOFILE=dictDemo
 COMPAREFILE=dictsComparison
+PERLMOD_DIR=perl-module
 
-all:	demo compare
+.PHONY: perl-module
+
+all:	demo compare perl-module
 lib:	$(LIBFILE)
 demo:	$(DEMOFILE)
 compare: $(COMPAREFILE)
@@ -60,13 +64,20 @@ $(DEMOFILE): dictDemo.c dictSearch.h $(LIBFILE)
 $(COMPAREFILE): dictsComparison.c dictSearch.h $(LIBFILE)
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -lDictSearch
 
+perl-module: $(PERLMOD_DIR)/FastDict.i
+	$(SWIG) -perl $(PERLMOD_DIR)/FastDict.i
+	$(CC) -c `perl -MConfig -e 'print join(" ", @Config{qw(ccflags optimize cccdlflags)}, "-I$$Config{archlib}/CORE")'` -I./.. dictSearch.c
+	$(CC) -c `perl -MConfig -e 'print join(" ", @Config{qw(ccflags optimize cccdlflags)}, "-I$$Config{archlib}/CORE")'` -I./.. -o $(PERLMOD_DIR)/FastDict_wrap.o $(PERLMOD_DIR)/FastDict_wrap.c
+	$(CC) `perl -MConfig -e 'print $$Config{lddlflags}'` dictSearch.o $(PERLMOD_DIR)/FastDict_wrap.o -o $(PERLMOD_DIR)/FastDict.so
+
 clean:
-	rm -f $(LIBFILE) $(DEMOFILE) $(COMPAREFILE)
+	rm -f $(LIBFILE) $(DEMOFILE) $(COMPAREFILE) *.o $(PERLMOD_DIR)/{FastDict.pm,FastDict.so,FastDict_wrap.*}
 
 help:
 	@$(ECHO) "This is short help about building library and programs. More information is in files Description-RU.pdf (russian) and Description-EN.pdf (english)."
-	@$(ECHO) "	$$ make - build all at once"
-	@$(ECHO) "	$$ make lib - build only library"
-	@$(ECHO) "	$$ make demo - build library and demo program"
-	@$(ECHO) "	$$ make compare - build library and comparison program"
-	@$(ECHO) "	$$ make clean - erase library, demo program and comparison program"
+	@$(ECHO) "	$$ make - builds all at once"
+	@$(ECHO) "	$$ make perl-module - builds Perl module based on library"
+	@$(ECHO) "	$$ make lib - builds only library"
+	@$(ECHO) "	$$ make demo - builds library and demo program"
+	@$(ECHO) "	$$ make compare - builds library and comparison program"
+	@$(ECHO) "	$$ make clean - erases all generated files"
